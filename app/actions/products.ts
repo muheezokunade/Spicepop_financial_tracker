@@ -43,3 +43,33 @@ export async function updateProductStock(productId: string, newStock: number) {
     return { success: false, error: "Failed to update stock" }
   }
 }
+
+export async function deleteProduct(productId: string) {
+  try {
+    // Check if product has any sales records before deleting
+    const salesCheck = await sql`
+      SELECT COUNT(*) as count FROM sales WHERE product_id = ${productId}
+    `
+    
+    const salesCount = salesCheck[0]?.count || 0
+    
+    if (salesCount > 0) {
+      return { 
+        success: false, 
+        error: `Cannot delete product. It has ${salesCount} associated sales records. Consider archiving instead.` 
+      }
+    }
+
+    await sql`
+      DELETE FROM products WHERE id = ${productId}
+    `
+
+    revalidatePath("/")
+    revalidatePath("/inventory")
+    revalidatePath("/sales")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting product:", error)
+    return { success: false, error: "Failed to delete product" }
+  }
+}

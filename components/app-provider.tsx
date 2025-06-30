@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import type { DbProduct, DbSale, DbExpense, DbCategory } from "@/lib/db-types"
 import { addExpense, bulkAddExpenses } from "@/app/actions/expenses"
 import { addCategory, updateCategory, deleteCategory } from "@/app/actions/categories"
-import { addProduct, updateProductStock } from "@/app/actions/products"
+import { addProduct, updateProductStock, deleteProduct } from "@/app/actions/products"
 import { addSale, bulkAddSales } from "@/app/actions/sales"
 
 /* ---------- Public-facing (UI) types ---------- */
@@ -57,6 +57,7 @@ interface AppContextType {
   deleteCategory: (id: string) => Promise<void>
   addProduct: (product: Omit<Product, "id">) => Promise<void>
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>
+  deleteProduct: (id: string) => Promise<void>
   refreshData: (isRetry?: boolean) => Promise<void>
 }
 
@@ -272,6 +273,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const handleDeleteProduct = async (id: string) => {
+    const result = await deleteProduct(id)
+    if (result.success) {
+      await refreshData()
+    } else {
+      throw new Error(result.error)
+    }
+  }
+
   useEffect(() => {
     refreshData()
   }, [refreshData])
@@ -316,6 +326,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deleteCategory: handleDeleteCategory,
         addProduct: handleAddProduct,
         updateProduct: handleUpdateProduct,
+        deleteProduct: handleDeleteProduct,
         refreshData,
       }}
     >

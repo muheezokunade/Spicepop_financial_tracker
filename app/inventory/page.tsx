@@ -8,21 +8,23 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { useApp } from "@/components/app-provider"
 import { Header } from "@/components/layout/header"
 import { Sidebar } from "@/components/layout/sidebar"
-import { Package, Edit, AlertTriangle, Search, Plus } from "lucide-react"
+import { Package, Edit, AlertTriangle, Search, Plus, Trash2 } from "lucide-react"
 import { formatNumber, formatCompactCurrency } from "@/lib/format"
 
 export default function InventoryPage() {
-  const { products, updateProduct, addProduct } = useApp()
+  const { products, updateProduct, addProduct, deleteProduct } = useApp()
   const [searchTerm, setSearchTerm] = useState("")
-  const [editingProduct, setEditingProduct] = useState<string | null>(null)
   const [stockUpdate, setStockUpdate] = useState(0)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
   const [newProductData, setNewProductData] = useState({
     name: "",
     sku: "",
@@ -35,7 +37,6 @@ export default function InventoryPage() {
   const handleStockUpdate = async (productId: string, newStock: number) => {
     try {
       await updateProduct(productId, { quantityInStock: newStock })
-      setEditingProduct(null)
       setStockUpdate(0)
     } catch (error) {
       console.error("Error updating stock:", error)
@@ -64,6 +65,24 @@ export default function InventoryPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return
+
+    try {
+      await deleteProduct(productToDelete)
+      setDeleteConfirmOpen(false)
+      setProductToDelete(null)
+    } catch (error) {
+      console.error("Error deleting product:", error)
+      alert(error instanceof Error ? error.message : "Failed to delete product")
+    }
+  }
+
+  const confirmDeleteProduct = (productId: string) => {
+    setProductToDelete(productId)
+    setDeleteConfirmOpen(true)
   }
 
   const filteredProducts = products.filter(
@@ -300,62 +319,71 @@ export default function InventoryPage() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setEditingProduct(product.id)
-                                      setStockUpdate(product.quantityInStock)
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="w-[95vw] max-w-md">
-                                  <DialogHeader>
-                                    <DialogTitle>Update Stock - {product.name}</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <Label htmlFor="currentStock">Current Stock</Label>
-                                      <Input id="currentStock" value={formatNumber(product.quantityInStock)} disabled />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="newStock">New Stock Quantity</Label>
-                                      <Input
-                                        id="newStock"
-                                        type="number"
-                                        min="0"
-                                        value={stockUpdate}
-                                        onChange={(e) => setStockUpdate(Number.parseInt(e.target.value) || 0)}
-                                      />
-                                    </div>
-                                    <div className="bg-muted p-3 rounded-lg">
-                                      <p className="text-sm">
-                                        <span className="font-medium">Change: </span>
-                                        <span
-                                          className={
-                                            stockUpdate > product.quantityInStock
-                                              ? "text-green-600"
-                                              : "text-destructive"
-                                          }
-                                        >
-                                          {stockUpdate > product.quantityInStock ? "+" : ""}
-                                          {formatNumber(stockUpdate - product.quantityInStock)}
-                                        </span>
-                                      </p>
-                                    </div>
+                              <div className="flex items-center gap-2">
+                                <Dialog>
+                                  <DialogTrigger asChild>
                                     <Button
-                                      onClick={() => handleStockUpdate(product.id, stockUpdate)}
-                                      className="w-full"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setStockUpdate(product.quantityInStock)
+                                      }}
                                     >
-                                      Update Stock
+                                      <Edit className="h-4 w-4" />
                                     </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
+                                  </DialogTrigger>
+                                  <DialogContent className="w-[95vw] max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>Update Stock - {product.name}</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label htmlFor="currentStock">Current Stock</Label>
+                                        <Input id="currentStock" value={formatNumber(product.quantityInStock)} disabled />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="newStock">New Stock Quantity</Label>
+                                        <Input
+                                          id="newStock"
+                                          type="number"
+                                          min="0"
+                                          value={stockUpdate}
+                                          onChange={(e) => setStockUpdate(Number.parseInt(e.target.value) || 0)}
+                                        />
+                                      </div>
+                                      <div className="bg-muted p-3 rounded-lg">
+                                        <p className="text-sm">
+                                          <span className="font-medium">Change: </span>
+                                          <span
+                                            className={
+                                              stockUpdate > product.quantityInStock
+                                                ? "text-green-600"
+                                                : "text-destructive"
+                                            }
+                                          >
+                                            {stockUpdate > product.quantityInStock ? "+" : ""}
+                                            {formatNumber(stockUpdate - product.quantityInStock)}
+                                          </span>
+                                        </p>
+                                      </div>
+                                      <Button
+                                        onClick={() => handleStockUpdate(product.id, stockUpdate)}
+                                        className="w-full"
+                                      >
+                                        Update Stock
+                                      </Button>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => confirmDeleteProduct(product.id)}
+                                  className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         )
@@ -368,6 +396,27 @@ export default function InventoryPage() {
           </div>
         </main>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this product? This action cannot be undone and will permanently remove the product from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteProduct}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Product
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
