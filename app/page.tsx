@@ -125,12 +125,12 @@ export default function Dashboard() {
   const COLORS = ["#dc2626", "#ea580c", "#d97706", "#ca8a04", "#65a30d"]
 
   // Custom tooltip for bar chart
-  const CustomBarTooltip = ({ active, payload, label }: any) => {
+  const CustomBarTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ color: string; dataKey: string; value: number }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
           <p className="font-medium">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: { color: string; dataKey: string; value: number }, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
               {`${entry.dataKey === "revenue" ? "Revenue" : "Expenses"}: ${formatCurrency(entry.value)}`}
             </p>
@@ -142,7 +142,7 @@ export default function Dashboard() {
   }
 
   // Custom tooltip for pie chart
-  const CustomPieTooltip = ({ active, payload }: any) => {
+  const CustomPieTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
@@ -165,7 +165,7 @@ export default function Dashboard() {
           <div className="space-y-4 md:space-y-6">
             <div className="space-y-2">
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-sm md:text-base text-muted-foreground">Welcome back! Here's your business overview.</p>
+              <p className="text-sm md:text-base text-muted-foreground">Welcome back! Here&apos;s your business overview.</p>
             </div>
 
             {/* Key Metrics */}

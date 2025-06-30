@@ -47,7 +47,7 @@ export default function SettingsPage() {
     }
   }
 
-  const handleEdit = (category: any) => {
+  const handleEdit = (category: { id: string; name: string; monthlyBudget: number }) => {
     setEditingCategory(category.id)
     setFormData({
       name: category.name,

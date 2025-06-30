@@ -1,13 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true,
+    // Enable ESLint during builds
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    // Enable TypeScript checking during builds
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true,
+  },
+  experimental: {
+    // Improve build performance
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 }
 
