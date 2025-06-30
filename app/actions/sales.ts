@@ -1,6 +1,6 @@
 "use server"
 
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/database"
 import { revalidatePath } from "next/cache"
 
 export async function addSale(formData: FormData) {

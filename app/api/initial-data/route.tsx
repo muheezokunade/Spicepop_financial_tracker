@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/database"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -13,10 +13,10 @@ export async function GET() {
 
     return NextResponse.json(
       { 
-        products: productsResult.rows, 
-        sales: salesResult.rows, 
-        expenses: expensesResult.rows, 
-        categories: categoriesResult.rows 
+        products: productsResult, 
+        sales: salesResult, 
+        expenses: expensesResult, 
+        categories: categoriesResult 
       },
       {
         status: 200,
