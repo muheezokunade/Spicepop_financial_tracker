@@ -1,0 +1,28 @@
+[build]
+  command = "pnpm build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PNPM_VERSION = "8"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[dev]
+  command = "pnpm dev"
+  port = 3000
+
+# Next.js API routes and pages
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/nextjs"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/nextjs"
+  status = 200
+
+# Environment variables needed:
+# DATABASE_URL - Your Neon PostgreSQL connection string 
